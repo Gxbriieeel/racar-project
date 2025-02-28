@@ -215,6 +215,7 @@ export const getProductsByType = onRequest(async (req, res): Promise<void> => {
 
 
 // =========================FUNCIÓN COMENTARIOS=============================
+
 // 🔹 Función para registrar comentarios de usuarios
 export const addComment = onRequest(async (req, res): Promise<void> => {
   try {
@@ -268,3 +269,24 @@ export const getAllComments = onRequest(async (req, res): Promise<void> => {
     res.status(500).json({error: "Error al obtener comentarios"});
   }
 });
+
+
+// Tengo más opciones, baby, tú no eres la única
+// Ahora hay más mujeres y eso es gracias a la música
+// Dice que a lo de nosotros le dió muerte súbita
+// Es a otra mujer a la que se lo voy a lubricar
+// Se van hasta tus amigas también
+// Puedes decir que por otra te cambié
+// La lista de la' baby' la agrandé
+// Nos separamos como Wisin y Yandel
+// Aunque de vez en cuando quiere volver
+// Encontré otra mujer a responder
+// Y cuando quieras prender, o te quieras perder
+// A los lugares donde has visto por internet
+// Tú me buscas o te busco
+// Y los deseos te los cumplo
+// Ella usó el love machine como si fuera un columpio
+// Te hablo claro, de vez en cuando, por ti pregunto
+// Pero si no apareces, a una puta se lo unto
+
+
