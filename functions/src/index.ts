@@ -271,22 +271,58 @@ export const getAllComments = onRequest(async (req, res): Promise<void> => {
 });
 
 
-// Tengo más opciones, baby, tú no eres la única
-// Ahora hay más mujeres y eso es gracias a la música
-// Dice que a lo de nosotros le dió muerte súbita
-// Es a otra mujer a la que se lo voy a lubricar
-// Se van hasta tus amigas también
-// Puedes decir que por otra te cambié
-// La lista de la' baby' la agrandé
-// Nos separamos como Wisin y Yandel
-// Aunque de vez en cuando quiere volver
-// Encontré otra mujer a responder
-// Y cuando quieras prender, o te quieras perder
-// A los lugares donde has visto por internet
-// Tú me buscas o te busco
-// Y los deseos te los cumplo
-// Ella usó el love machine como si fuera un columpio
-// Te hablo claro, de vez en cuando, por ti pregunto
-// Pero si no apareces, a una puta se lo unto
+export const addProduct = onRequest(async (req, res): Promise<void> => {
+  try {
+    const {
+      nombre,
+      descripcion,
+      imagenURL,
+      anioInicio,
+      anioFin,
+      marcaSlug,
+      modeloSlug,
+      tipoProductoSlug,
+    } = req.body;
 
+    if (!nombre || !descripcion || !imagenURL || !anioInicio || !anioFin ||
+        !marcaSlug || !modeloSlug || !tipoProductoSlug) {
+      res.status(400).json({error: "Todos los campos son obligatorios"});
+      return;
+    }
 
+    // Buscar documentos por slug para obtener los IDs
+    const marcaSnapshot = await db.collection("marca").where("slug", "==", marcaSlug).get();
+    const modeloSnapshot = await db.collection("modelo").where("slug", "==", modeloSlug).get();
+    const tipoProductoSnapshot = await db.collection("tipo_producto").where("slug", "==", tipoProductoSlug).get();
+
+    if (marcaSnapshot.empty || modeloSnapshot.empty || tipoProductoSnapshot.empty) {
+      res.status(404).json({error: "Marca, modelo o tipo de producto no encontrados"});
+      return;
+    }
+
+    const marcaRef = marcaSnapshot.docs[0].ref;
+    const modeloRef = modeloSnapshot.docs[0].ref;
+    const tipoProductoRef = tipoProductoSnapshot.docs[0].ref;
+
+    const nuevoProducto = {
+      nombre,
+      descripcion,
+      imagenURL,
+      anioInicio: parseInt(anioInicio, 10),
+      anioFin: parseInt(anioFin, 10),
+      marca: marcaRef,
+      modelo: modeloRef,
+      tipoProducto: tipoProductoRef,
+    };
+
+    const productoCreado = await db.collection("productos").add(nuevoProducto);
+
+    res.status(201).json({
+      message: "Producto agregado correctamente",
+      productoId: productoCreado.id,
+    });
+  } catch (error) {
+    console.error("Error al agregar producto:", error);
+    res.status(500).json({error: "Error al agregar producto"});
+  }
+});
