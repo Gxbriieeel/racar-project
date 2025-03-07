@@ -270,7 +270,7 @@ export const getAllComments = onRequest(async (req, res): Promise<void> => {
   }
 });
 
-// Función para agregar productos
+
 export const addProduct = onRequest(async (req, res): Promise<void> => {
   try {
     const {
@@ -280,44 +280,30 @@ export const addProduct = onRequest(async (req, res): Promise<void> => {
       anioInicio,
       anioFin,
       marcaSlug,
-      modelosSlug, // ahora es un array
+      modeloSlug,
       tipoProductoSlug,
     } = req.body;
 
     if (!nombre || !descripcion || !imagenURL || !anioInicio || !anioFin ||
-        !marcaSlug || !Array.isArray(modelosSlug) || modelosSlug.length === 0 || !tipoProductoSlug) {
-      res.status(400).json({error: "Todos los campos son obligatorios y modelosSlug debe ser un array con al menos un elemento"});
+        !marcaSlug || !modeloSlug || !tipoProductoSlug) {
+      res.status(400).json({error: "Todos los campos son obligatorios"});
       return;
     }
 
-    // Buscar la marca por su slug
+    // Buscar documentos por slug para obtener los IDs
     const marcaSnapshot = await db.collection("marca").where("slug", "==", marcaSlug).get();
-    if (marcaSnapshot.empty) {
-      res.status(404).json({error: "Marca no encontrada"});
-      return;
-    }
-    const marcaRef = marcaSnapshot.docs[0].ref;
-
-    // Buscar el tipo de producto por su slug
+    const modeloSnapshot = await db.collection("modelo").where("slug", "==", modeloSlug).get();
     const tipoProductoSnapshot = await db.collection("tipo_producto").where("slug", "==", tipoProductoSlug).get();
-    if (tipoProductoSnapshot.empty) {
-      res.status(404).json({error: "Tipo de producto no encontrado"});
+
+    if (marcaSnapshot.empty || modeloSnapshot.empty || tipoProductoSnapshot.empty) {
+      res.status(404).json({error: "Marca, modelo o tipo de producto no encontrados"});
       return;
     }
+
+    const marcaRef = marcaSnapshot.docs[0].ref;
+    const modeloRef = modeloSnapshot.docs[0].ref;
     const tipoProductoRef = tipoProductoSnapshot.docs[0].ref;
 
-    // Buscar cada modelo por su slug
-    const modeloRefs = [];
-    for (const slug of modelosSlug) {
-      const modeloSnapshot = await db.collection("modelo").where("slug", "==", slug).get();
-      if (modeloSnapshot.empty) {
-        res.status(404).json({error: `Modelo con slug '${slug}' no encontrado`});
-        return;
-      }
-      modeloRefs.push(modeloSnapshot.docs[0].ref);
-    }
-
-    // Crear el nuevo producto
     const nuevoProducto = {
       nombre,
       descripcion,
@@ -325,18 +311,16 @@ export const addProduct = onRequest(async (req, res): Promise<void> => {
       anioInicio: parseInt(anioInicio, 10),
       anioFin: parseInt(anioFin, 10),
       marca: marcaRef,
-      modelo: modeloRefs, // ahora es array de referencias
+      modelo: modeloRef,
       tipoProducto: tipoProductoRef,
     };
 
-    // Guardar el producto
     const productoCreado = await db.collection("productos").add(nuevoProducto);
 
     res.status(201).json({
       message: "Producto agregado correctamente",
       productoId: productoCreado.id,
     });
-
   } catch (error) {
     console.error("Error al agregar producto:", error);
     res.status(500).json({error: "Error al agregar producto"});
